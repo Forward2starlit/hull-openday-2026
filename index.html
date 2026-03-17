@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赫尔大学 Open Day 评估系统</title>
+<style>
+  /* 全局莫兰迪配色与基础排版 */
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+    background-color: #EBEAE6; /* 莫兰迪燕麦底色 */
+    color: #4A4A4A;
+    margin: 0;
+    padding: 30px 15px;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .form-container { 
+    background: #FFFFFF; 
+    padding: 35px; 
+    border-radius: 16px; 
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06); 
+    width: 100%; 
+    max-width: 480px; 
+  }
+  
+  h2 { text-align: center; color: #5C6B67; /* 莫兰迪深青灰 */ margin-top: 0; font-size: 24px; font-weight: 600; }
+  .subtitle { text-align: center; color: #8C8C8C; font-size: 14px; margin-bottom: 30px; }
+
+  label { display: block; margin-top: 18px; font-weight: 500; color: #666666; font-size: 14px; margin-bottom: 6px; }
+  
+  select, input { 
+    width: 100%; 
+    padding: 12px; 
+    background-color: #F8F8F8;
+    border: 1px solid #D6D6D6; 
+    border-radius: 8px; 
+    box-sizing: border-box; 
+    font-size: 15px; 
+    color: #333333;
+    transition: all 0.3s ease;
+  }
+  select:focus, input:focus {
+    border-color: #8CA39D; /* 莫兰迪鼠尾草绿 */
+    outline: none;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(140, 163, 157, 0.15);
+  }
+
+  /* 成绩单卡片区域样式 */
+  .scorecard-section {
+    background-color: #FDFDFD;
+    border: 1px solid #EBEBEB;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .scorecard-section h3 {
+    margin-top: 0;
+    font-size: 16px;
+    color: #5C6B67;
+    border-bottom: 1px dashed #D6D6D6;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+
+  /* 两栏网格布局用于小分 */
+  .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* 隐藏控制 */
+  .hidden { display: none; }
+
+  /* 按钮样式 */
+  button { 
+    width: 100%; 
+    background-color: #8CA39D; /* 莫兰迪主色调：鼠尾草绿 */
+    color: white; 
+    border: none; 
+    padding: 14px; 
+    margin-top: 30px; 
+    border-radius: 8px; 
+    font-size: 16px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: background 0.3s, transform 0.1s; 
+  }
+  button:hover { background-color: #758C86; }
+  button:active { transform: scale(0.98); }
+  
+  /* 弹窗样式 */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 1000; }
+  .modal-box { background: white; padding: 30px; border-radius: 16px; max-width: 420px; width: 85%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
+  .modal-title { font-size: 20px; font-weight: 600; color: #5C6B67; margin-top: 0; border-bottom: 2px solid #F0F0F0; padding-bottom: 15px; text-align: center;}
+  .modal-content { margin-top: 20px; font-size: 15px; color: #555555; line-height: 1.8; white-space: pre-wrap; }
+  .close-btn { background-color: #D3A29D; /* 莫兰迪干玫瑰色 */ margin-top: 25px; }
+  .close-btn:hover { background-color: #BF8C87; }
+</style>
+</head>
+<body>
+
+<div class="form-container">
+  <h2>🎓 Open Day 成绩评估</h2>
+  <div class="subtitle">赫尔大学 2026 官方智能系统</div>
+  
+  <label>考试类型</label>
+  <select id="examType">
+    <option value="雅思">雅思 (IELTS)</option>
+    <option value="多邻国">多邻国 (DET)</option>
+    <option value="ELLT">ELLT</option>
+  </select>
+  
+  <label>提交的成绩单数量</label>
+  <select id="reportCount" onchange="toggleScorecards()">
+    <option value="1">1 张</option>
+    <option value="2">2 张 (进行拼分)</option>
+    <option value="3">3 张 (进行拼分)</option>
+  </select>
+
+  <div class="scorecard-section" id="scorecard-1">
+    <h3>第一张成绩单</h3>
+    <label style="margin-top:0;">总分</label>
+    <input type="number" id="total_1" step="0.5" placeholder="例如: 6.0">
+    
+    <label>各单项小分</label>
+    <div class="grid-2-col">
+      <div><input type="number" id="listening_1" step="0.5" placeholder="听力"></div>
+      <div><input type="number" id="reading_1" step="0.5" placeholder="阅读"></div>
+      <div><input type="number" id="speaking_1" step="0.5" placeholder="口语"></div>
+      <div><input type="number" id="writing_1" step="0.5" placeholder="写作"></div>
+    </div>
+  </div>
+
+  <div class="scorecard-section hidden" id="scorecard-2">
+    <h3>第二张成绩单</h3>
+    <label style="margin-top:0;">总分</label>
+    <input type="number" id="total_2" step="0.5">
+    
+    <label>各单项小分</label>
+    <div class="grid-2-col">
+      <div><input type="number" id="listening_2" step="0.5" placeholder="听力"></div>
+      <div><input type="number" id="reading_2" step="0.5" placeholder="阅读"></div>
+      <div><input type="number" id="speaking_2" step="0.5" placeholder="口语"></div>
+      <div><input type="number" id="writing_2" step="0.5" placeholder="写作"></div>
+    </div>
+  </div>
+
+  <div class="scorecard-section hidden" id="scorecard-3">
+    <h3>第三张成绩单</h3>
+    <label style="margin-top:0;">总分</label>
+    <input type="number" id="total_3" step="0.5">
+    
+    <label>各单项小分</label>
+    <div class="grid-2-col">
+      <div><input type="number" id="listening_3" step="0.5" placeholder="听力"></div>
+      <div><input type="number" id="reading_3" step="0.5" placeholder="阅读"></div>
+      <div><input type="number" id="speaking_3" step="0.5" placeholder="口语"></div>
+      <div><input type="number" id="writing_3" step="0.5" placeholder="写作"></div>
+    </div>
+  </div>
+
+  <button onclick="submitForm()" id="submitBtn">🚀 立即评估</button>
+</div>
+
+<div class="modal-overlay" id="myModal">
+  <div class="modal-box">
+    <h3 class="modal-title" id="modalTitle">🤖 正在智能匹配政策...</h3>
+    <div class="modal-content" id="modalText">请稍候，系统正在核算您的成绩...</div>
+    <button class="close-btn" onclick="closeModal()" id="closeBtn" style="display:none;">完成查看</button>
+  </div>
+</div>
+
+<script>
+  // ⚠️ 务必在这里填入你 n8n 的 Webhook Test URL！！！
+  const WEBHOOK_URL = "http://13.49.85.118:5678/webhook-test/cd082443-8a24-4396-b7ef-0cdd0311405c";
+
+  // 控制成绩单显示逻辑
+  function toggleScorecards() {
+    const count = parseInt(document.getElementById('reportCount').value);
+    document.getElementById('scorecard-2').classList.toggle('hidden', count < 2);
+    document.getElementById('scorecard-3').classList.toggle('hidden', count < 3);
+  }
+
+  // 获取并清理输入框的数据
+  function getVal(id) {
+    return document.getElementById(id).value.trim();
+  }
+
+  async function submitForm() {
+    const modal = document.getElementById('myModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalText = document.getElementById('modalText');
+    const closeBtn = document.getElementById('closeBtn');
+
+    // 构造发给 n8n 的精确 JSON 数据
+    const payload = {
+      "考试类型": getVal('examType'),
+      "成绩单数量": getVal('reportCount'),
+      
+      "总分": getVal('total_1'),
+      "听力": getVal('listening_1'),
+      "阅读": getVal('reading_1'),
+      "口语": getVal('speaking_1'),
+      "写作": getVal('writing_1'),
+
+      "成绩单2总分": getVal('total_2'),
+      "成绩单2听力": getVal('listening_2'),
+      "成绩单2阅读": getVal('reading_2'),
+      "成绩单2口语": getVal('speaking_2'),
+      "成绩单2写作": getVal('writing_2'),
+
+      "成绩单3总分": getVal('total_3'),
+      "成绩单3听力": getVal('listening_3'),
+      "成绩单3阅读": getVal('reading_3'),
+      "成绩单3口语": getVal('speaking_3'),
+      "成绩单3写作": getVal('writing_3')
+    };
+
+    // 弹出加载中弹窗
+    modal.style.display = "flex";
+    modalTitle.innerText = "🤖 正在智能匹配政策...";
+    modalText.innerText = "正在综合赫尔大学 Open Day 最新录取政策为您核算，请稍候...";
+    closeBtn.style.display = "none";
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      const result = await response.text(); 
+
+      // 展示结果
+      modalTitle.innerText = "🎉 您的专属录取报告";
+      modalText.innerText = result; 
+      closeBtn.style.display = "block";
+
+    } catch (error) {
+      modalTitle.innerText = "❌ 评估出错";
+      modalText.innerText = "抱歉，无法连接到评估系统。请检查网络或联系负责老师。";
+      closeBtn.style.display = "block";
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('myModal').style.display = "none";
+  }
+</script>
+
+</body>
+</html>
